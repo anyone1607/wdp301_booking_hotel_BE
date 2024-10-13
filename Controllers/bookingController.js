@@ -42,7 +42,7 @@ export const getBooking = async (req, res) => {
 // Get all bookings
 export const getAllBooking = async (req, res) => {
    try {
-      const bookings = await Booking.find().sort({ bookAt: -1 }); // Sort by booking date descending
+      const bookings = await Booking.find().sort({ bookAt: -1 }).populate('roomIds', 'roomName'); // Sort by booking date descending
       res.status(200).json({ success: true, message: "Successful!", data: bookings });
    } catch (error) {
       console.error("Error fetching all bookings:", error);

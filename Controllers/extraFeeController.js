@@ -22,7 +22,7 @@ export const createExtrafee = async (req, res) => {
 // Lấy tất cả các phí phát sinh
 export const getAllExtrafees = async (req, res) => {
     try {
-        const extrafees = await Extrafee.find().populate('hotelId', 'hotelName'); // populate hotel name
+        const extrafees = await Extrafee.find().populate('hotelId', 'name'); // populate hotel name
         res.status(200).json(extrafees);
     } catch (error) {
         res.status(500).json({ message: 'Lỗi khi lấy danh sách phí phát sinh.', error });
@@ -82,5 +82,23 @@ export const deleteExtrafee = async (req, res) => {
         res.status(200).json({ message: 'Đã xóa phí phát sinh thành công.' });
     } catch (error) {
         res.status(500).json({ message: 'Lỗi khi xóa phí phát sinh.', error });
+    }
+};
+
+
+// Get all extra fees by hotelId
+export const getExtraFeesByHotelId = async (req, res) => {
+    const { hotelId } = req.params;
+
+    try {
+        const extraFees = await Extrafee.find({ hotelId, status: 'active' }); // Lọc theo hotelId và chỉ lấy những khoản phí thêm đang "active"
+        if (!extraFees.length) {
+            return res.status(404).json({ success: false, message: "No extra fees found for this hotel." });
+        }
+
+        res.status(200).json({ success: true, message: "Extra fees retrieved successfully.", data: extraFees });
+    } catch (error) {
+        console.error("Error fetching extra fees:", error);
+        res.status(500).json({ success: false, message: "Internal server error." });
     }
 };

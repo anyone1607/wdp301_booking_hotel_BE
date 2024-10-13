@@ -12,6 +12,16 @@ const bookingSchema = new mongoose.Schema(
          ref: "RoomCategory",
 
       }],
+      extraIds: [{
+         type: mongoose.Types.ObjectId,
+         ref: "Extrafee",
+
+      }],
+      hotelId: {
+         type: mongoose.Types.ObjectId,
+         ref: "Hotel",
+
+      },
       name: {
          type: String,
          required: true

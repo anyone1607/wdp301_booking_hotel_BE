@@ -4,7 +4,8 @@ import {
     getAllExtrafees,
     getExtrafeeById,
     updateExtrafee,
-    deleteExtrafee
+    deleteExtrafee,
+    getExtraFeesByHotelId
 } from '../Controllers/extraFeeController.js';
 
 const router = express.Router();
@@ -17,7 +18,7 @@ router.get('/', getAllExtrafees);
 
 // Lấy phí phát sinh theo ID
 router.get('/:id', getExtrafeeById);
-
+router.get('/hotel/:hotelId', getExtraFeesByHotelId);
 // Cập nhật phí phát sinh theo ID
 router.put('/:id', updateExtrafee);
 
