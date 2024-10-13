@@ -1,5 +1,5 @@
 import Booking from './../models/Booking.js';
-
+import RoomCategory from "../models/RoomCategory.js";
 // Create new booking
 export const createBooking = async (req, res) => {
    const newBooking = new Booking(req.body);
@@ -127,5 +127,53 @@ export const cancelBookingById = async (req, res) => {
    } catch (error) {
       console.error('Error cancelling booking:', error);
       res.status(500).json({ success: false, message: 'Failed to cancel booking' });
+   }
+};
+
+// ================================================================================================================
+
+export const getAvailableRoomCount = async (req, res) => {
+   const { hotelId, bookAt, checkOut } = req.query;
+
+   if (!hotelId || !bookAt || !checkOut) {
+      return res.status(400).json({ message: "Missing required parameters." });
+   }
+
+   try {
+      // Convert string dates to Date objects
+      const startDate = new Date(bookAt);
+      const endDate = new Date(checkOut);
+
+      // Find all confirmed bookings within the requested date range for the hotel
+      const bookings = await Booking.find({
+         hotelId: mongoose.Types.ObjectId(hotelId),
+         status: 'confirmed',
+         $or: [
+            { checkOut: { $gt: startDate, $lt: endDate } },
+            { bookAt: { $gt: startDate, $lt: endDate } },
+            { bookAt: { $lt: startDate }, checkOut: { $gt: endDate } }
+         ]
+      }).populate('roomIds');
+
+      // Get all room categories for the hotel
+      const roomCategories = await RoomCategory.find({ hotelId: hotelId });
+
+      // Create a list of booked room IDs
+      const bookedRoomIds = bookings.flatMap(booking => booking.roomIds.map(room => room._id.toString()));
+
+      // Count available rooms
+      const availableRoomCounts = roomCategories.map(room => ({
+         roomId: room._id,
+         roomName: room.roomName,
+         availableCount: room.quantity - bookedRoomIds.filter(id => id === room._id.toString()).length
+      }));
+
+      return res.status(200).json({
+         success: true,
+         data: availableRoomCounts,
+      });
+   } catch (error) {
+      console.error("Error fetching available room count:", error);
+      return res.status(500).json({ message: "Internal server error." });
    }
 };
