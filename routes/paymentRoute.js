@@ -8,9 +8,9 @@ dotenv.config();
 const router = express.Router();
 
 const payos = new PayOS(
-    "bf5f0eaf-610c-44c0-b622-f77ccd209389",
-    "48038d7f-c9ec-44f5-9133-453065493a6a",
-    "668615efa053dfcafba201e6710972b9c98adf34776b52d25461eb67c6de352d"
+    "eea8ab60-aa1c-4c0c-a4d1-ab504ad5b582",
+    "ea97f7da-d699-4ace-ac9b-3ac977f0c250",
+    "bbd5ecde91faba16df941bf37514e4fb67206b7cb1e95aee9d5bcd748a7cc781"
 );
 
 router.post('/create-payment-link', async (req, res) => {

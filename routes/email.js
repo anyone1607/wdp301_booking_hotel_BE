@@ -2,7 +2,7 @@ import express from 'express'
 const router = express.Router();
 import Booking from './../models/Booking.js';
 
-import sendConfirmationEmail from '../utils/sendEmail.js'; // Giả sử bạn có một hàm để gửi email
+import {sendConfirmationEmail} from '../utils/sendEmail.js'; // Giả sử bạn có một hàm để gửi email
 
 router.put('/confirm-and-send-email/:id', async (req, res) => {
     const bookingId = req.params.id;
