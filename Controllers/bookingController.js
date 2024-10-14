@@ -132,48 +132,77 @@ export const cancelBookingById = async (req, res) => {
 
 // ================================================================================================================
 
-export const getAvailableRoomCount = async (req, res) => {
-   const { hotelId, bookAt, checkOut } = req.query;
+export // Lấy tất cả booking với status: confirmed theo hotelId
+   const getConfirmedBookingsByHotelId = async (req, res) => {
+      try {
+         const { hotelId } = req.params; // Lấy hotelId từ params
 
-   if (!hotelId || !bookAt || !checkOut) {
-      return res.status(400).json({ message: "Missing required parameters." });
-   }
+         // Tìm tất cả booking với status: confirmed theo hotelId
+         const confirmedBookings = await Booking.find({
+            hotelId: hotelId,
+            status: 'confirmed'
+         })
+         // .populate('roomIds') // Nếu bạn cần thông tin chi tiết về phòng
+         //    .populate('userId'); // Nếu bạn cần thông tin người dùng
 
+         res.status(200).json({
+            success: true,
+            data: confirmedBookings
+         });
+      } catch (error) {
+         console.error("Error fetching confirmed bookings:", error);
+         res.status(500).json({
+            success: false,
+            message: 'Server Error',
+            error: error.message
+         });
+      }
+   };
+
+
+export const getRoomAvailability = async (req, res) => {
    try {
-      // Convert string dates to Date objects
-      const startDate = new Date(bookAt);
-      const endDate = new Date(checkOut);
+      // Lấy hotelId, bookAt, checkOut từ params (đảm bảo URL chứa các tham số này)
+      const { hotelId, bookAt, checkOut } = req.params;
 
-      // Find all confirmed bookings within the requested date range for the hotel
+      // Kiểm tra nếu thiếu tham số cần thiết
+      if (!hotelId || !bookAt || !checkOut) {
+         return res.status(400).json({ success: false, message: 'Missing required parameters' });
+      }
+
+      // Parse ngày từ params và kiểm tra tính hợp lệ
+      const bookingStart = new Date(bookAt);
+      const bookingEnd = new Date(checkOut);
+
+      if (isNaN(bookingStart) || isNaN(bookingEnd)) {
+         return res.status(400).json({ success: false, message: 'Invalid date format' });
+      }
+
+      // Truy vấn để tìm các booking trong khoảng thời gian được chỉ định cho khách sạn
       const bookings = await Booking.find({
-         hotelId: mongoose.Types.ObjectId(hotelId),
-         status: 'confirmed',
+         hotelId: hotelId,
          $or: [
-            { checkOut: { $gt: startDate, $lt: endDate } },
-            { bookAt: { $gt: startDate, $lt: endDate } },
-            { bookAt: { $lt: startDate }, checkOut: { $gt: endDate } }
-         ]
-      }).populate('roomIds');
+            { bookAt: { $lt: bookingEnd }, checkOut: { $gt: bookingStart } }, // Khoảng thời gian bị chồng lấn
+         ],
+      }).select('roomIds');
 
-      // Get all room categories for the hotel
-      const roomCategories = await RoomCategory.find({ hotelId: hotelId });
+      // Đếm số lượng phòng đã được đặt cho từng loại phòng
+      const roomCounts = {};
+      bookings.forEach(booking => {
+         booking.roomIds.forEach(roomId => {
+            roomCounts[roomId] = (roomCounts[roomId] || 0) + 1;
+         });
+      });
 
-      // Create a list of booked room IDs
-      const bookedRoomIds = bookings.flatMap(booking => booking.roomIds.map(room => room._id.toString()));
-
-      // Count available rooms
-      const availableRoomCounts = roomCategories.map(room => ({
-         roomId: room._id,
-         roomName: room.roomName,
-         availableCount: room.quantity - bookedRoomIds.filter(id => id === room._id.toString()).length
-      }));
-
+      // Trả về kết quả thành công với số lượng phòng đã đặt
       return res.status(200).json({
          success: true,
-         data: availableRoomCounts,
+         roomCounts,
       });
    } catch (error) {
-      console.error("Error fetching available room count:", error);
-      return res.status(500).json({ message: "Internal server error." });
+      // Bắt lỗi và trả về phản hồi lỗi
+      return res.status(500).json({ success: false, message: error.message });
    }
 };
+
+
