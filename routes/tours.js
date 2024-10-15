@@ -10,7 +10,7 @@ const router = express.Router()
 router.post('/',singleUpload, createTour)
 
 //Update tour 
-router.put('/:id',  updateTour)
+router.put('/:id',singleUpload, updateTour)
 
 //Delete tour 
 router.delete('/:id', deleteTour)

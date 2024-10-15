@@ -48,16 +48,47 @@ export const createTour = async (req, res) => {
 };
 
 
+
+// Update Tour
 // Update Tour
 export const updateTour = async (req, res) => {
   const id = req.params.id;
+  const file = req.file; // Lấy file từ request
 
   try {
+    // Lấy dữ liệu tour từ request body
+    const { location, ...tourData } = req.body;
+
+    // Tìm kiếm tour cũ để lấy thông tin
+    const tour = await Tour.findById(id);
+    if (!tour) {
+      return res.status(404).json({ success: false, message: "Tour not found!" });
+    }
+
+    // Kiểm tra tính hợp lệ của location
+    const foundLocation = await Location.findById(location);
+    if (!foundLocation) {
+      return res.status(404).json({ success: false, message: "Location not found!" });
+    }
+
+    let photoUrl = tour.photo; // Mặc định giữ lại ảnh cũ
+
+    // Kiểm tra nếu có file mới
+    if (file) {
+      const fileUri = getDataUri(file);
+      const cloudResponse = await cloudinary.uploader.upload(fileUri.content, {
+        folder: "users",
+      });
+      console.log("Cloudinary response:", cloudResponse); // Log phản hồi từ Cloudinary
+      photoUrl = cloudResponse.secure_url; // Cập nhật URL ảnh mới
+    }
+
+    // Cập nhật tour với dữ liệu mới
     const updatedTour = await Tour.findByIdAndUpdate(
       id,
-      { $set: req.body },
+      { ...tourData, location: foundLocation._id, city: foundLocation.city, photo: photoUrl },
       { new: true }
-    );
+    ).populate("location");
 
     res.status(200).json({
       success: true,
@@ -65,9 +96,11 @@ export const updateTour = async (req, res) => {
       data: updatedTour,
     });
   } catch (error) {
-    res.status(500).json({ success: false, message: "Failed to update" });
+    console.error("Error updating tour:", error); // Log lỗi chi tiết
+    res.status(500).json({ success: false, message: "Failed to update. Try again!", error: error.message });
   }
 };
+
 
 // Delete Tour
 export const deleteTour = async (req, res) => {
