@@ -33,7 +33,7 @@ const tourSchema = new mongoose.Schema(
     },
     maxGroupSize: {
       type: Number,
-      required: true,
+      required: false,
     },
     reviews: [
       {
@@ -49,18 +49,24 @@ const tourSchema = new mongoose.Schema(
       {
         type: mongoose.Types.ObjectId,
         ref: "Itinerary",
-      }
+      },
     ],
     hotels: [
       {
         type: mongoose.Types.ObjectId,
         ref: "Hotel",
-      }
+      },
     ],
     restaurants: [
       {
         type: mongoose.Types.ObjectId,
         ref: "Restaurant",
+      },
+    ],
+    location:[
+      {
+        type:mongoose.Types.ObjectId,
+        ref:"Location"
       }
     ]
   },

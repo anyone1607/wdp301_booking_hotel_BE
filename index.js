@@ -16,7 +16,7 @@ import emailRoute from './routes/email.js';
 import contactRoute from './routes/contact.js';
 import roomCategoryRoute from './routes/roomCategory.js';
 import extraFeeRoute from './routes/extraFee.js'
-
+import locationRoute from './routes/locations.js';
 
 dotenv.config()
 const app = express()
@@ -55,6 +55,7 @@ app.use("/api/v1/restaurants", restaurantRoute)
 app.use("/api/v1/payment", paymentRoute);
 app.use("/api/v1/booking", emailRoute)
 app.use('/api/v1/contact', contactRoute);
+app.use("/api/v1/locations", locationRoute);
 app.use('/api/v1/roomCategory', roomCategoryRoute);
 app.use('/api/v1/extraFee', extraFeeRoute);
 
