@@ -1,44 +1,53 @@
-import { response } from "express";
 import Tour from "../models/Tour.js";
 import Location from "../models/Location.js"; // Import model Location
+import cloudinary from "../utils/cloudinary.js";
+import getDataUri from "../utils/datauri.js";
 
-// Create new tour
 export const createTour = async (req, res) => {
+  const file = req.file; // Lấy file từ request
+  console.log("Received file:", file); // Log file nhận được
+
   try {
-    // Lấy location ID từ req.body
-    const { location, ...tourData } = req.body;
+      const { location, ...tourData } = req.body;
+      console.log("Tour data:", tourData); // Log dữ liệu tour
 
-    // Tìm kiếm thông tin location để lấy city
-    const foundLocation = await Location.findById(location);
-    
-    // Nếu không tìm thấy location, trả về lỗi
-    if (!foundLocation) {
-      return res.status(404).json({ success: false, message: "Location not found!" });
-    }
+      const foundLocation = await Location.findById(location);
+      if (!foundLocation) {
+          return res.status(404).json({ success: false, message: "Location not found!" });
+      }
 
-    // Tạo tour mới với city từ location
-    const newTour = new Tour({
-      ...tourData,
-      city: foundLocation.city, // Lấy city từ location
-      location: foundLocation._id, // Giữ ID của location
-    });
+      let photoUrl = '';
+      if (file) {
+          const fileUri = getDataUri(file);
+          const cloudResponse = await cloudinary.uploader.upload(fileUri.content, {
+              folder: "users",
+          });
+          console.log("Cloudinary response:", cloudResponse); // Log phản hồi từ Cloudinary
+          photoUrl = cloudResponse.secure_url;
+      }
 
-    // Lưu tour
-    const savedTour = await newTour.save();
-    
-    // Populate location để lấy thông tin
-    const populatedTour = await Tour.findById(savedTour._id).populate("location");
-    
-    res.status(200).json({
-      success: true,
-      message: "Successfully created",
-      data: populatedTour,
-    });
+      const newTour = new Tour({
+          ...tourData,
+          city: foundLocation.city,
+          location: foundLocation._id,
+          photo: photoUrl
+      });
+
+      const savedTour = await newTour.save();
+      const populatedTour = await Tour.findById(savedTour._id).populate("location");
+      
+      res.status(200).json({
+          success: true,
+          message: "Successfully created",
+          data: populatedTour,
+      });
   } catch (error) {
-    console.error(error); // In ra lỗi chi tiết
-    res.status(500).json({ success: false, message: "Failed to create. Try again!", error: error.message });
+      console.error("Error creating tour:", error); // Log lỗi chi tiết
+      res.status(500).json({ success: false, message: "Failed to create. Try again!", error: error.message });
   }
 };
+
+
 // Update Tour
 export const updateTour = async (req, res) => {
   const id = req.params.id;

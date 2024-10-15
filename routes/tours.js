@@ -2,11 +2,12 @@ import express from 'express'
 import { createTour, deleteTour, getAllTour, getFeaturedTour, getSingleTour, getTourBySearch, getTourCount, updateTour, getToursByCity } from '../Controllers/tourControllers.js'
 
 import { verifyAdmin } from '../utils/verifyToken.js'
+import singleUpload from '../middleware/mutler.js'
 
 const router = express.Router()
 
 //Create new tour 
-router.post('/', createTour)
+router.post('/',singleUpload, createTour)
 
 //Update tour 
 router.put('/:id',  updateTour)
