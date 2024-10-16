@@ -161,47 +161,37 @@ export // Lấy tất cả booking với status: confirmed theo hotelId
 
 
 export const getRoomAvailability = async (req, res) => {
+   const { hotelId, bookAt, checkOut } = req.params;
+
    try {
-      // Lấy hotelId, bookAt, checkOut từ params (đảm bảo URL chứa các tham số này)
-      const { hotelId, bookAt, checkOut } = req.params;
-
-      // Kiểm tra nếu thiếu tham số cần thiết
-      if (!hotelId || !bookAt || !checkOut) {
-         return res.status(400).json({ success: false, message: 'Missing required parameters' });
-      }
-
-      // Parse ngày từ params và kiểm tra tính hợp lệ
-      const bookingStart = new Date(bookAt);
-      const bookingEnd = new Date(checkOut);
-
-      if (isNaN(bookingStart) || isNaN(bookingEnd)) {
-         return res.status(400).json({ success: false, message: 'Invalid date format' });
-      }
-
-      // Truy vấn để tìm các booking trong khoảng thời gian được chỉ định cho khách sạn
-      const bookings = await Booking.find({
-         hotelId: hotelId,
+      // Tìm các booking đã tồn tại trong khoảng thời gian này
+      const existingBookings = await Booking.find({
+         hotelId,
+         status: 'confirmed',
          $or: [
-            { bookAt: { $lt: bookingEnd }, checkOut: { $gt: bookingStart } }, // Khoảng thời gian bị chồng lấn
-         ],
-      }).select('roomIds');
-
-      // Đếm số lượng phòng đã được đặt cho từng loại phòng
-      const roomCounts = {};
-      bookings.forEach(booking => {
-         booking.roomIds.forEach(roomId => {
-            roomCounts[roomId] = (roomCounts[roomId] || 0) + 1;
-         });
+            { bookAt: { $lte: checkOut }, checkOut: { $gte: bookAt } } // Trùng lịch
+         ]
       });
 
-      // Trả về kết quả thành công với số lượng phòng đã đặt
-      return res.status(200).json({
-         success: true,
-         roomCounts,
+      // Lấy danh sách phòng từ RoomCategory
+      const roomCategories = await RoomCategory.find({ hotelId });
+
+      // Tính toán số lượng phòng còn trống
+      const availableRooms = roomCategories.map(room => {
+         const bookedCount = existingBookings.reduce((count, booking) => {
+            return count + (booking.roomIds.filter(roomId => roomId.toString() === room._id.toString()).length);
+         }, 0);
+
+         return {
+            roomId: room._id,
+            name: room.roomName,
+            availableCount: room.quantity - bookedCount
+         };
       });
+
+      res.status(200).json({ availableRooms });
    } catch (error) {
-      // Bắt lỗi và trả về phản hồi lỗi
-      return res.status(500).json({ success: false, message: error.message });
+      res.status(500).json({ message: "Lỗi khi kiểm tra số lượng phòng", error });
    }
 };
 

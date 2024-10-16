@@ -3,10 +3,15 @@ import mongoose from "mongoose";
 const roomCategorySchema = new mongoose.Schema(
     {
         hotelId: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "Hotel",
+            type: mongoose.Types.ObjectId,
+            ref: "Tour",
             required: true
         },
+        // tourId: {
+        //     type: mongoose.Types.ObjectId,
+        //     ref: "Tour",
+        //     required: true
+        // },
         roomName: {
             type: String,
             required: true,

@@ -4,9 +4,14 @@ const extraFeeSchema = new mongoose.Schema(
     {
         hotelId: {
             type: mongoose.Types.ObjectId,
-            ref: "Hotel",
+            ref: "Tour",
             required: true
         },
+        // tourId: {
+        //     type: mongoose.Types.ObjectId,
+        //     ref: "Tour",
+        //     required: true
+        // },
         extraName: {
             type: String,
             required: true,

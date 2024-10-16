@@ -2,38 +2,30 @@ import mongoose from "mongoose";
 
 const tourSchema = new mongoose.Schema(
   {
+    //title la name cua hotel
     title: {
       type: String,
       required: true,
-      unique: true,
+      // unique: true,
     },
-    city: {
+    hotelPhone: {
+      type: Number,
+      required: true
+    },
+    hotelEmail: {
       type: String,
-      required: true,
+      required: true
     },
     address: {
       type: String,
       required: true,
     },
-    distance: {
-      type: Number,
-      required: true,
-    },
-    photo: {
-      type: String,
-      required: true,
+    expiryDate: {
+      type: Date
     },
     desc: {
       type: String,
       required: true,
-    },
-    price: {
-      type: Number,
-      required: true,
-    },
-    maxGroupSize: {
-      type: Number,
-      required: false,
     },
     reviews: [
       {
@@ -41,6 +33,36 @@ const tourSchema = new mongoose.Schema(
         ref: "Review",
       },
     ],
+
+    location: [
+      {
+        type: mongoose.Types.ObjectId,
+        ref: "Location"
+      }
+    ],
+    ///////////////////////////////////////////////////duoi la du lieu thua ko can xoa/////////////////////////////////////////////////////////
+    city: {
+      type: String,
+    },
+
+    distance: {
+      type: Number,
+
+    },
+    photo: {
+      type: String,
+
+    },
+
+    price: {
+      type: Number,
+
+    },
+    maxGroupSize: {
+      type: Number,
+
+    },
+
     featured: {
       type: Boolean,
       default: false,
@@ -62,12 +84,6 @@ const tourSchema = new mongoose.Schema(
         type: mongoose.Types.ObjectId,
         ref: "Restaurant",
       },
-    ],
-    location:[
-      {
-        type:mongoose.Types.ObjectId,
-        ref:"Location"
-      }
     ]
   },
   { timestamps: true }

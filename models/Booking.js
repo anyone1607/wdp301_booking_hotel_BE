@@ -19,9 +19,14 @@ const bookingSchema = new mongoose.Schema(
       }],
       hotelId: {
          type: mongoose.Types.ObjectId,
-         ref: "Hotel",
-
+         ref: "Tour",
+         required: true
       },
+      // tourId: {
+      //    type: mongoose.Types.ObjectId,
+      //    ref: "Tour",
+      //    required: true
+      // },
       name: {
          type: String,
          required: true
@@ -51,10 +56,7 @@ const bookingSchema = new mongoose.Schema(
          type: Date,
          required: true
       },
-      roomQuantity: {
-         type: Number,
-         default: 1
-      },
+
       status: {
          type: String,
          default: 'pending',
@@ -62,7 +64,7 @@ const bookingSchema = new mongoose.Schema(
       },
       totalAmount: {
          type: Number,
-         required: true
+         // required: true
       },
    },
    { timestamps: true }

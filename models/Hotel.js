@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 
 const hotelSchema = new mongoose.Schema({
+
   tourId: {
     type: mongoose.Types.ObjectId,
     ref: "Tour",

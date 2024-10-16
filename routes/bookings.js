@@ -22,8 +22,6 @@ router.get("/user/:userId", getAllBookingByUserId);
 router.put("/:bookingId", updateBookingById);
 router.put("/cancel/:bookingId", cancelBookingById);
 router.get("/hotel/:hotelId", getConfirmedBookingsByHotelId);
-router.get("/availability", getRoomAvailability);
-
-
+router.get("/availability/:hotelId/:bookAt/:checkOut", getRoomAvailability);
 
 export default router;
