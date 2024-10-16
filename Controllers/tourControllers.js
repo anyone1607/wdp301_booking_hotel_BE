@@ -15,7 +15,7 @@ export const createTour = async (req, res) => {
       if (!foundLocation) {
           return res.status(404).json({ success: false, message: "Location not found!" });
       }
-
+// cloudinary
       let photoUrl = '';
       if (file) {
           const fileUri = getDataUri(file);
