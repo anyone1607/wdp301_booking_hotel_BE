@@ -16,7 +16,7 @@ router.post("/", createHotel);
 router.put("/:id", updateHotel);
 
 // Get all hotels
-router.get("/",  getAllHotels);
+router.get("/", getAllHotels);
 
 // Get all hotels by tour ID
 router.get("/tour/:tourId", getAllHotelsByTourId);

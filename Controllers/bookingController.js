@@ -1,49 +1,56 @@
 import Booking from './../models/Booking.js';
-
-// create new booking
+import RoomCategory from "../models/RoomCategory.js";
+// Create new booking
 export const createBooking = async (req, res) => {
    const newBooking = new Booking(req.body);
 
    try {
       const savedBooking = await newBooking.save();
+      // Set a timeout to cancel the booking after 60 seconds
       setTimeout(async () => {
          try {
-             await Booking.findByIdAndUpdate(savedBooking._id, { status: 'cancelled' }, { new: true });
-             console.log(`Booking ${savedBooking._id} status updated to cancel`);
+            await Booking.findByIdAndUpdate(savedBooking._id, { status: 'cancelled' }, { new: true });
+            console.log(`Booking ${savedBooking._id} status updated to cancelled`);
          } catch (error) {
-             console.error(`Failed to update booking status for ${savedBooking._id}:`, error);
+            console.error(`Failed to update booking status for ${savedBooking._id}:`, error);
          }
-     }, 60000);
+      }, 60000);
 
       res.status(200).json({ success: true, message: "Your tour is booked!", data: savedBooking });
    } catch (error) {
+      console.error("Error creating booking:", error);
       res.status(500).json({ success: false, message: "Internal server error!" });
    }
 };
 
-// get single booking
+// Get single booking
 export const getBooking = async (req, res) => {
-   const id = req.params.id;
+   const { id } = req.params;
 
    try {
-      const book = await Booking.findById(id).populate('Hotel').populate('Restaurant');
-      res.status(200).json({ success: true, message: "Successful!", data: book });
+      const booking = await Booking.findById(id).populate('roomIds'); // Changed to roomId
+      if (!booking) {
+         return res.status(404).json({ success: false, message: "Booking not found!" });
+      }
+      res.status(200).json({ success: true, message: "Successful!", data: booking });
    } catch (error) {
-      res.status(404).json({ success: false, message: "Not Found!" });
+      console.error("Error fetching booking:", error);
+      res.status(500).json({ success: false, message: "Internal server error!" });
    }
 };
 
-// get all bookings
+// Get all bookings
 export const getAllBooking = async (req, res) => {
    try {
-      const books = await Booking.find().sort({ bookAt: -1 }); // Sắp xếp theo ngày giảm dần
-      res.status(200).json({ success: true, message: "Successful!", data: books });
+      const bookings = await Booking.find().sort({ bookAt: -1 }).populate('roomIds', 'roomName'); // Sort by booking date descending
+      res.status(200).json({ success: true, message: "Successful!", data: bookings });
    } catch (error) {
+      console.error("Error fetching all bookings:", error);
       res.status(500).json({ success: false, message: "Internal server error!" });
    }
 };
 
-// delete booking
+// Delete booking
 export const deleteBooking = async (req, res) => {
    const { bookingId } = req.params;
 
@@ -61,12 +68,12 @@ export const deleteBooking = async (req, res) => {
    }
 };
 
-// get all bookings by userId
+// Get all bookings by userId
 export const getAllBookingByUserId = async (req, res) => {
-   const userId = req.params.userId;
+   const { userId } = req.params;
 
    try {
-      const bookings = await Booking.find({ userId }).sort({ bookAt: -1 }); // Sắp xếp theo ngày giảm dần
+      const bookings = await Booking.find({ userId }).sort({ bookAt: -1 }); // Sort by booking date descending
 
       if (!bookings.length) {
          return res.status(404).json({ success: false, message: 'No bookings found for this user' });
@@ -79,33 +86,29 @@ export const getAllBookingByUserId = async (req, res) => {
    }
 };
 
-// update booking by ID
+// Update booking by ID
 export const updateBookingById = async (req, res) => {
-   const { bookingId } = req.params; // Extract the bookingId from the request parameters
+   const { bookingId } = req.params;
 
    try {
-       // Attempt to find the booking by ID and update it with the new data from the request body
-       const updatedBooking = await Booking.findByIdAndUpdate(
-           bookingId,
-           { $set: req.body }, // Set the fields provided in the request body
-           { new: true } // Return the updated document
-       );
+      const updatedBooking = await Booking.findByIdAndUpdate(
+         bookingId,
+         { $set: req.body },
+         { new: true, runValidators: true } // Added runValidators to validate the updated data
+      );
 
-       // If the booking isn't found, respond with a 404 status and a corresponding message
-       if (!updatedBooking) {
-           return res.status(404).json({ success: false, message: 'Booking not found' });
-       }
+      if (!updatedBooking) {
+         return res.status(404).json({ success: false, message: 'Booking not found' });
+      }
 
-       // If the update is successful, respond with a 200 status and the updated booking data
-       res.status(200).json({ success: true, message: 'Booking updated successfully', data: updatedBooking });
+      res.status(200).json({ success: true, message: 'Booking updated successfully', data: updatedBooking });
    } catch (error) {
-       // If there's an error during the update process, log the error and respond with a 500 status
-       console.error('Error updating booking:', error);
-       res.status(500).json({ success: false, message: 'Failed to update booking' });
+      console.error('Error updating booking:', error);
+      res.status(500).json({ success: false, message: 'Failed to update booking' });
    }
 };
 
-// cancel booking by ID
+// Cancel booking by ID
 export const cancelBookingById = async (req, res) => {
    const { bookingId } = req.params;
 
@@ -126,3 +129,70 @@ export const cancelBookingById = async (req, res) => {
       res.status(500).json({ success: false, message: 'Failed to cancel booking' });
    }
 };
+
+// ================================================================================================================
+
+export // Lấy tất cả booking với status: confirmed theo hotelId
+   const getConfirmedBookingsByHotelId = async (req, res) => {
+      try {
+         const { hotelId } = req.params; // Lấy hotelId từ params
+
+         // Tìm tất cả booking với status: confirmed theo hotelId
+         const confirmedBookings = await Booking.find({
+            hotelId: hotelId,
+            status: 'confirmed'
+         })
+         // .populate('roomIds') // Nếu bạn cần thông tin chi tiết về phòng
+         //    .populate('userId'); // Nếu bạn cần thông tin người dùng
+
+         res.status(200).json({
+            success: true,
+            data: confirmedBookings
+         });
+      } catch (error) {
+         console.error("Error fetching confirmed bookings:", error);
+         res.status(500).json({
+            success: false,
+            message: 'Server Error',
+            error: error.message
+         });
+      }
+   };
+
+
+export const getRoomAvailability = async (req, res) => {
+   const { hotelId, bookAt, checkOut } = req.params;
+
+   try {
+      // Tìm các booking đã tồn tại trong khoảng thời gian này
+      const existingBookings = await Booking.find({
+         hotelId,
+         status: 'confirmed',
+         $or: [
+            { bookAt: { $lte: checkOut }, checkOut: { $gte: bookAt } } // Trùng lịch
+         ]
+      });
+
+      // Lấy danh sách phòng từ RoomCategory
+      const roomCategories = await RoomCategory.find({ hotelId });
+
+      // Tính toán số lượng phòng còn trống
+      const availableRooms = roomCategories.map(room => {
+         const bookedCount = existingBookings.reduce((count, booking) => {
+            return count + (booking.roomIds.filter(roomId => roomId.toString() === room._id.toString()).length);
+         }, 0);
+
+         return {
+            roomId: room._id,
+            name: room.roomName,
+            availableCount: room.quantity - bookedCount
+         };
+      });
+
+      res.status(200).json({ availableRooms });
+   } catch (error) {
+      res.status(500).json({ message: "Lỗi khi kiểm tra số lượng phòng", error });
+   }
+};
+
+
