@@ -14,7 +14,13 @@ import restaurantRoute from './routes/restaurants.js'
 import paymentRoute from './routes/paymentRoute.js'; // Import paymentRoute
 import emailRoute from './routes/email.js';
 import contactRoute from './routes/contact.js';
+<<<<<<< HEAD
 import locationRoute from './routes/locations.js';
+=======
+import roomCategoryRoute from './routes/roomCategory.js';
+import extraFeeRoute from './routes/extraFee.js'
+
+>>>>>>> Hiupc
 
 dotenv.config()
 const app = express()
@@ -53,7 +59,12 @@ app.use("/api/v1/restaurants", restaurantRoute)
 app.use("/api/v1/payment", paymentRoute);
 app.use("/api/v1/booking", emailRoute)
 app.use('/api/v1/contact', contactRoute);
+<<<<<<< HEAD
 app.use("/api/v1/locations", locationRoute);
+=======
+app.use('/api/v1/roomCategory', roomCategoryRoute);
+app.use('/api/v1/extraFee', extraFeeRoute);
+>>>>>>> Hiupc
 
 app.listen(port, () => {
    connect()
