@@ -1,8 +1,14 @@
 import RoomCategory from '../models/RoomCategory.js';
+import Hotel from '../models/Hotel.js';
 
 // Tạo một danh mục phòng mới
 export const createRoomCategory = async (req, res) => {
     const { hotelId, roomName, roomPrice, maxOccupancy, quantity, description, status } = req.body;
+
+    // Kiểm tra dữ liệu đầu vào
+    if (!hotelId || !roomName || typeof roomPrice !== 'number' || typeof maxOccupancy !== 'number' || typeof quantity !== 'number') {
+        return res.status(400).json({ message: "Tất cả các trường là bắt buộc và phải có kiểu dữ liệu đúng." });
+    }
 
     try {
         const newRoomCategory = new RoomCategory({
@@ -12,20 +18,26 @@ export const createRoomCategory = async (req, res) => {
             maxOccupancy,
             quantity,
             description,
-            status: status || "active", // Mặc định là active nếu không truyền vào
+            status: status || "active",
         });
 
         await newRoomCategory.save();
-        res.status(201).json(newRoomCategory);
+
+        // Populate để lấy tên khách sạn
+        const populatedRoomCategory = await RoomCategory.findById(newRoomCategory._id).populate('hotelId', 'title');
+
+        res.status(201).json(populatedRoomCategory);
     } catch (error) {
-        res.status(500).json({ message: 'Lỗi khi tạo danh mục phòng.', error });
+        res.status(500).json({ message: 'Lỗi khi tạo danh mục phòng.', error: error.message });
     }
 };
+
 
 // Lấy tất cả các danh mục phòng
 export const getAllRoomCategories = async (req, res) => {
     try {
-        const roomCategories = await RoomCategory.find().populate('hotelId', 'name');
+        const roomCategories = await RoomCategory.find().populate('hotelId', 'title'); // Lấy tên hotel
+
         res.status(200).json(roomCategories);
     } catch (error) {
         res.status(500).json({ message: 'Lỗi khi lấy danh mục phòng.', error });
@@ -37,7 +49,7 @@ export const getRoomCategoriesByHotelId = async (req, res) => {
     const { hotelId } = req.params;
 
     try {
-        const roomCategories = await RoomCategory.find({ hotelId }).populate('hotelId', 'name');
+        const roomCategories = await RoomCategory.find({ hotelId }).populate('hotelId', 'title');
 
         if (!roomCategories.length) {
             return res.status(404).json({ message: 'Không tìm thấy danh mục phòng cho khách sạn này.' });
@@ -47,7 +59,6 @@ export const getRoomCategoriesByHotelId = async (req, res) => {
     } catch (error) {
         res.status(500).json({ message: 'Lỗi khi lấy danh mục phòng theo hotelId.', error });
     }
-
 };
 
 // Lấy một danh mục phòng theo ID
@@ -55,7 +66,7 @@ export const getRoomCategoryById = async (req, res) => {
     const { id } = req.params;
 
     try {
-        const roomCategory = await RoomCategory.findById(id).populate('hotelId', 'name');
+        const roomCategory = await RoomCategory.findById(id).populate('hotelId', 'title');
 
         if (!roomCategory) {
             return res.status(404).json({ message: 'Danh mục phòng không tồn tại.' });
@@ -72,12 +83,17 @@ export const updateRoomCategory = async (req, res) => {
     const { id } = req.params;
     const { hotelId, roomName, roomPrice, maxOccupancy, quantity, description, status } = req.body;
 
+    // Kiểm tra dữ liệu đầu vào
+    if (!hotelId || !roomName || !roomPrice || !maxOccupancy || !quantity) {
+        return res.status(400).json({ message: "Tất cả các trường là bắt buộc." });
+    }
+
     try {
         const updatedRoomCategory = await RoomCategory.findByIdAndUpdate(
             id,
             { hotelId, roomName, roomPrice, maxOccupancy, quantity, description, status },
             { new: true }
-        ).exec;
+        ).populate('hotelId', 'title'); // Populate để lấy tên khách sạn
 
         if (!updatedRoomCategory) {
             return res.status(404).json({ message: 'Danh mục phòng không tồn tại.' });
