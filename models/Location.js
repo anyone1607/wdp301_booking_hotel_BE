@@ -2,6 +2,10 @@ import mongoose from "mongoose";
 
 const locationSchema = new mongoose.Schema(
   {
+    logo: {
+      type: String,
+      required: true,
+    },
     title: {
       type: String,
       required: true,
