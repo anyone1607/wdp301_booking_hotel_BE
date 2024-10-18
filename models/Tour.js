@@ -10,11 +10,9 @@ const tourSchema = new mongoose.Schema(
     },
     hotelPhone: {
       type: Number,
-      required: true
     },
     hotelEmail: {
       type: String,
-      required: true
     },
     address: {
       type: String,

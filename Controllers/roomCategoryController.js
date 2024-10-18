@@ -61,22 +61,22 @@ export const getRoomCategoriesByHotelId = async (req, res) => {
     }
 };
 
-// Lấy một danh mục phòng theo ID
 export const getRoomCategoryById = async (req, res) => {
-    const { id } = req.params;
-
     try {
-        const roomCategory = await RoomCategory.findById(id).populate('hotelId', 'title');
-
-        if (!roomCategory) {
-            return res.status(404).json({ message: 'Danh mục phòng không tồn tại.' });
+        console.log("Fetching room by ID:", req.params.id);  // In ra để kiểm tra
+        const room = await RoomCategory.findById(req.params.id).populate('hotelId', 'title'); // Thêm .populate()
+        
+        if (!room) {
+            return res.status(404).json({ success: false, message: 'Room not found' });
         }
 
-        res.status(200).json(roomCategory);
+        res.status(200).json(room);
     } catch (error) {
-        res.status(500).json({ message: 'Lỗi khi lấy danh mục phòng theo ID.', error });
+        res.status(500).json({ success: false, message: 'Server Error', error });
     }
 };
+
+
 
 // Cập nhật danh mục phòng theo ID
 export const updateRoomCategory = async (req, res) => {

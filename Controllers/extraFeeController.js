@@ -22,7 +22,7 @@ export const createExtrafee = async (req, res) => {
 // Lấy tất cả các phí phát sinh
 export const getAllExtrafees = async (req, res) => {
     try {
-        const extrafees = await Extrafee.find().populate('hotelId', 'name'); // populate hotel name
+        const extrafees = await Extrafee.find().populate('hotelId', 'title'); // populate hotel name
         res.status(200).json(extrafees);
     } catch (error) {
         res.status(500).json({ message: 'Lỗi khi lấy danh sách phí phát sinh.', error });
