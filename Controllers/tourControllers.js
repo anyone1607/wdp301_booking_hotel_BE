@@ -4,18 +4,19 @@ import cloudinary from "../utils/cloudinary.js";
 import getDataUri from "../utils/datauri.js";
 
 export const createTour = async (req, res) => {
-  const file = req.file; // Lấy file từ request
+  const file = req.file;
   console.log("Received file:", file); // Log file nhận được
 
   try {
       const { location, ...tourData } = req.body;
       console.log("Tour data:", tourData); // Log dữ liệu tour
+      console.log("Location ID:", location); // Log location
 
       const foundLocation = await Location.findById(location);
       if (!foundLocation) {
           return res.status(404).json({ success: false, message: "Location not found!" });
       }
-// cloudinary
+
       let photoUrl = '';
       if (file) {
           const fileUri = getDataUri(file);
@@ -32,6 +33,7 @@ export const createTour = async (req, res) => {
           location: foundLocation._id,
           photo: photoUrl
       });
+      console.log("New tour data:", newTour); // Log dữ liệu tour mới
 
       const savedTour = await newTour.save();
       const populatedTour = await Tour.findById(savedTour._id).populate("location");
@@ -42,7 +44,7 @@ export const createTour = async (req, res) => {
           data: populatedTour,
       });
   } catch (error) {
-      console.error("Error creating tour:", error); // Log lỗi chi tiết
+      console.error("Error creating tour:", error.message); // Log lỗi chi tiết
       res.status(500).json({ success: false, message: "Failed to create. Try again!", error: error.message });
   }
 };
@@ -128,7 +130,6 @@ export const getSingleTour = async (req, res) => {
 
 
 // Get All Tours
-// Get All Tours
 export const getAllTour = async (req, res) => {
   try {
     const tours = await Tour.find({}).populate("reviews").populate("location");
@@ -187,7 +188,7 @@ export const getTourCount = async (req, res) => {
 export const getToursByCity = async (req, res) => {
   try {
     const city = req.params.city;
-    const tours = await Tour.find({ city: city });
+    const tours = await Tour.find({ city: city }).populate("location", "city");
 
     if (tours.length === 0) {
       return res.status(404).json({ message: 'No tours found in this city' });
@@ -198,3 +199,4 @@ export const getToursByCity = async (req, res) => {
     res.status(500).json({ message: 'Server Error', error: error.message });
   }
 };
+
