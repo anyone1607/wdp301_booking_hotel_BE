@@ -47,6 +47,10 @@ const bookingSchema = new mongoose.Schema(
          type: String,
          required: true
       },
+      email: {
+         type: String,
+         required: true
+      },
       bookAt: {
          type: Date,
          required: true
