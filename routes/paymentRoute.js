@@ -27,7 +27,7 @@ router.post('/create-payment-link', async (req, res) => {
             amount: amount * 10,
             description: bookingId, // Example description
             orderCode: Math.floor(10000000 + Math.random() * 90000000),
-            returnUrl: `${YOUR_DOMAIN}/success`,
+            returnUrl: `${YOUR_DOMAIN}/successed/${bookingId}`, // Truyền bookingId vào query params
             cancelUrl: `${YOUR_DOMAIN}/cancel`,
         };
 
@@ -86,6 +86,48 @@ router.get('/payment-success/:id', async (req, res) => {
 // Route to handle payment cancellation
 router.get('/payment-cancel/:id', (req, res) => {
     res.send('<h1>Payment cancelled</h1><p>Your booking has not been confirmed.</p>');
+});
+
+router.post('/', async (req, res) => {
+    // Lấy dữ liệu từ req.body
+    const { amount, bookingId, status } = req.body;
+
+    try {
+        // Kiểm tra xem booking có tồn tại không
+        const booking = await Booking.findById(bookingId);
+        if (!booking) {
+            return res.status(404).json({ message: 'Booking not found' });
+        }
+
+        // Tạo payment mới
+        const payment = new Payment({
+            amount: amount,          // Gán giá trị amount từ req.body
+            bookingId: bookingId,    // Gán giá trị bookingId từ req.body
+            status: status || 'confirmed' // Gán giá trị status từ req.body, mặc định là 'confirmed' 
+        });
+
+        // Lưu payment vào cơ sở dữ liệu
+        await payment.save();
+
+        // Trả về thông tin payment vừa tạo
+        return res.status(201).json({ message: 'Payment created successfully', payment });
+    } catch (error) {
+        console.error('Error creating payment:', error);
+        return res.status(500).json({ message: 'Internal Server Error' });
+    }
+});
+
+// Lấy payment theo bookingId
+router.get('/:bookingId', async (req, res) => {
+    try {
+        const { bookingId } = req.params;
+        const payment = await Payment.findOne({ bookingId: bookingId });
+
+        res.status(200).json({ success: true, data: payment });
+    } catch (error) {
+        console.error("Error fetching payment:", error.message);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
 });
 
 export default router;
