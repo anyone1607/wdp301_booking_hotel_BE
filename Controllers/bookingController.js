@@ -1,20 +1,38 @@
 import Booking from './../models/Booking.js';
 import RoomCategory from "../models/RoomCategory.js";
+import Payment from './../models/Payment.js'; // Import Payment model
+
 // Create new booking
 export const createBooking = async (req, res) => {
     const newBooking = new Booking(req.body);
 
     try {
         const savedBooking = await newBooking.save();
+
         // Set a timeout to cancel the booking after 60 seconds
         setTimeout(async () => {
             try {
-                await Booking.findByIdAndUpdate(savedBooking._id, { status: 'cancelled' }, { new: true });
-                console.log(`Booking ${savedBooking._id} status updated to cancelled`);
+                // Fetch the booking to get booking ID
+                const booking = await Booking.findById(savedBooking._id);
+
+                // Find payment details using the booking ID from the booking
+                const payment = await Payment.findOne({ bookingId: booking._id }); // Find payment by bookingId
+
+
+
+                // If payment status is confirmed, do not cancel
+                if (!payment) {
+                    // If payment status is not confirmed, cancel the booking
+                    await Booking.findByIdAndUpdate(savedBooking._id, { status: 'cancelled' }, { new: true });
+                    console.log(`Booking ${savedBooking._id} status updated to cancelled`);
+
+                } else {
+                    console.log(`Booking ${savedBooking._id} is confirmed, cancellation aborted.`);
+                }
             } catch (error) {
                 console.error(`Failed to update booking status for ${savedBooking._id}:`, error);
             }
-        }, 60000);
+        }, 60000); // 60 seconds
 
         res.status(200).json({ success: true, message: "Your tour is booked!", data: savedBooking });
     } catch (error) {
@@ -22,6 +40,7 @@ export const createBooking = async (req, res) => {
         res.status(500).json({ success: false, message: "Internal server error!" });
     }
 };
+
 
 // Get single booking
 export const getBooking = async (req, res) => {

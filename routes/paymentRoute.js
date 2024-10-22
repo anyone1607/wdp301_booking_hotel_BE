@@ -7,6 +7,7 @@ dotenv.config();
 
 const router = express.Router();
 
+
 // const payos = new PayOS(
 //     "eea8ab60-aa1c-4c0c-a4d1-ab504ad5b582",
 //     "ea97f7da-d699-4ace-ac9b-3ac977f0c250",
@@ -19,21 +20,36 @@ const payos = new PayOS(
 );
 
 router.post('/create-payment-link', async (req, res) => {
-    const { amount, bookingId } = req.body;
+    const { amount, bookingId, role } = req.body;
     const YOUR_DOMAIN = process.env.REACT_URL;
 
     try {
-        const order = {
-            amount: amount * 10,
-            description: bookingId, // Example description
-            orderCode: Math.floor(10000000 + Math.random() * 90000000),
-            returnUrl: `${YOUR_DOMAIN}/successed/${bookingId}`, // Truyền bookingId vào query params
-            cancelUrl: `${YOUR_DOMAIN}/cancel`,
-        };
+        if (role === 'admin') {
+            const order = {
+                amount: amount * 10,
+                description: bookingId, // Example description
+                orderCode: Math.floor(10000000 + Math.random() * 90000000),
+                returnUrl: `${YOUR_DOMAIN}/successedAdmin/${bookingId}`, // Truyền bookingId vào query params
+                cancelUrl: `${YOUR_DOMAIN}/cancelAdmin`,
+            };
+            const paymentLink = await payos.createPaymentLink(order);
+            res.json({ checkoutUrl: paymentLink.checkoutUrl });
+        } else {
+            const order = {
+                amount: amount * 10,
+                description: bookingId, // Example description
+                orderCode: Math.floor(10000000 + Math.random() * 90000000),
+                returnUrl: `${YOUR_DOMAIN}/successed/${bookingId}`, // Truyền bookingId vào query params
+                cancelUrl: `${YOUR_DOMAIN}/cancel`,
+            };
+            const paymentLink = await payos.createPaymentLink(order);
+            res.json({ checkoutUrl: paymentLink.checkoutUrl });
+        }
 
-        const paymentLink = await payos.createPaymentLink(order);
 
-        res.json({ checkoutUrl: paymentLink.checkoutUrl });
+
+
+
     } catch (error) {
         console.error("Error creating payment link:", error.message);
         res.status(500).json({ error: error.message });
