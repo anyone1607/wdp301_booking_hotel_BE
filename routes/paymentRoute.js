@@ -7,33 +7,49 @@ dotenv.config();
 
 const router = express.Router();
 
-// const payos = new PayOS(
-//     "eea8ab60-aa1c-4c0c-a4d1-ab504ad5b582",
-//     "ea97f7da-d699-4ace-ac9b-3ac977f0c250",
-//     "bbd5ecde91faba16df941bf37514e4fb67206b7cb1e95aee9d5bcd748a7cc781"
-// );
+
 const payos = new PayOS(
-    "58df5e6d-3103-47d4-8ebf-fdedc50b569d",
-    "5fa82b89-b299-4eca-a5a8-db77534a80b5",
-    "9f56900f80c7c1dec5ddc69a2a9b10aee8d432e9f8c748c2cd84f21026db0005"
+    "eea8ab60-aa1c-4c0c-a4d1-ab504ad5b582",
+    "ea97f7da-d699-4ace-ac9b-3ac977f0c250",
+    "bbd5ecde91faba16df941bf37514e4fb67206b7cb1e95aee9d5bcd748a7cc781"
 );
+// const payos = new PayOS(
+//     "58df5e6d-3103-47d4-8ebf-fdedc50b569d",
+//     "5fa82b89-b299-4eca-a5a8-db77534a80b5",
+//     "9f56900f80c7c1dec5ddc69a2a9b10aee8d432e9f8c748c2cd84f21026db0005"
+// );
 
 router.post('/create-payment-link', async (req, res) => {
-    const { amount, bookingId } = req.body;
+    const { amount, bookingId, role } = req.body;
     const YOUR_DOMAIN = process.env.REACT_URL;
 
     try {
-        const order = {
-            amount: amount * 10,
-            description: bookingId, // Example description
-            orderCode: Math.floor(10000000 + Math.random() * 90000000),
-            returnUrl: `${YOUR_DOMAIN}/successed/${bookingId}`, // Truyền bookingId vào query params
-            cancelUrl: `${YOUR_DOMAIN}/cancel`,
-        };
+        if (role === 'admin') {
+            const order = {
+                amount: amount * 10,
+                description: bookingId, // Example description
+                orderCode: Math.floor(10000000 + Math.random() * 90000000),
+                returnUrl: `${YOUR_DOMAIN}/successedAdmin/${bookingId}`, // Truyền bookingId vào query params
+                cancelUrl: `${YOUR_DOMAIN}/cancelAdmin`,
+            };
+            const paymentLink = await payos.createPaymentLink(order);
+            res.json({ checkoutUrl: paymentLink.checkoutUrl });
+        } else {
+            const order = {
+                amount: amount * 10,
+                description: bookingId, // Example description
+                orderCode: Math.floor(10000000 + Math.random() * 90000000),
+                returnUrl: `${YOUR_DOMAIN}/successed/${bookingId}`, // Truyền bookingId vào query params
+                cancelUrl: `${YOUR_DOMAIN}/cancel`,
+            };
+            const paymentLink = await payos.createPaymentLink(order);
+            res.json({ checkoutUrl: paymentLink.checkoutUrl });
+        }
 
-        const paymentLink = await payos.createPaymentLink(order);
 
-        res.json({ checkoutUrl: paymentLink.checkoutUrl });
+
+
+
     } catch (error) {
         console.error("Error creating payment link:", error.message);
         res.status(500).json({ error: error.message });

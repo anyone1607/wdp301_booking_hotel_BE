@@ -17,7 +17,7 @@ import contactRoute from './routes/contact.js';
 import roomCategoryRoute from './routes/roomCategory.js';
 import extraFeeRoute from './routes/extraFee.js';
 import locationRoute from './routes/locations.js';
-
+import refundRoute from './routes/refund.js'
 dotenv.config();
 const app = express();
 const port = process.env.PORT || 8000;
@@ -58,7 +58,7 @@ app.use('/api/v1/contact', contactRoute);
 app.use("/api/v1/locations", locationRoute);
 app.use('/api/v1/roomCategory', roomCategoryRoute);
 app.use('/api/v1/extraFee', extraFeeRoute);
-
+app.use('/api/v1/refund', refundRoute);
 app.listen(port, () => {
    connect();
    console.log('server listening on port', port);

@@ -1,32 +1,17 @@
-import express from 'express'
+import express from 'express';
+import { sendConfirmationEmail } from '../utils/sendEmail.js'; // Import hàm gửi email
+
 const router = express.Router();
-import Booking from './../models/Booking.js';
 
-import {sendConfirmationEmail} from '../utils/sendEmail.js'; // Giả sử bạn có một hàm để gửi email
-
-router.put('/confirm-and-send-email/:id', async (req, res) => {
-    const bookingId = req.params.id;
-
-    try {
-        // Cập nhật trạng thái booking
-        const booking = await Booking.findByIdAndUpdate(
-            bookingId,
-            { status: 'confirmed' },
-            { new: true }
-        );
-
-        if (!booking) {
-            return res.status(404).json({ success: false, message: 'Booking not found' });
-        }
-
-        // Gửi email xác nhận
-        await sendConfirmationEmail(booking);
-
-        res.json({ success: true, data: booking });
-    } catch (error) {
-        console.error('Error confirming booking and sending email:', error);
-        res.status(500).json({ success: false, message: 'Internal Server Error' });
-    }
+// Route gửi email xác nhận
+router.post('/send-confirmation', async (req, res) => {
+  const booking = req.body; // Lấy dữ liệu booking từ request body
+  try {
+    await sendConfirmationEmail(booking); // Gọi hàm gửi email
+    res.status(200).json({ message: 'Confirmation email sent successfully.' });
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to send confirmation email.', error: error.message });
+  }
 });
 
-export default router; 
+export default router;

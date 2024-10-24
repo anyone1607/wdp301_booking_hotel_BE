@@ -1,5 +1,6 @@
 import Booking from './../models/Booking.js';
 import RoomCategory from "../models/RoomCategory.js";
+
 // Create new booking
 export const createBooking = async (req, res) => {
     const newBooking = new Booking(req.body);
@@ -28,7 +29,11 @@ export const getBooking = async (req, res) => {
     const { id } = req.params;
 
     try {
-        const booking = await Booking.findById(id).populate('roomIds'); // Changed to roomId
+        const booking = await Booking.findById(id)
+            .populate('roomIds', 'roomName price') // Populate room details
+            .populate('hotelId', 'title address photo')  // Populate hotel details
+            .populate('extraIds', 'extraName extraPrice');
+
         if (!booking) {
             return res.status(404).json({ success: false, message: "Booking not found!" });
         }
@@ -42,7 +47,12 @@ export const getBooking = async (req, res) => {
 // Get all bookings
 export const getAllBooking = async (req, res) => {
     try {
-        const bookings = await Booking.find().sort({ bookAt: -1 }).populate('roomIds', 'roomName').populate('hotelId').populate('extraIds'); // Sort by booking date descending
+        const bookings = await Booking.find()
+            .sort({ bookAt: -1 })
+            .populate('roomIds', 'roomName')  // Populate room details
+            .populate('hotelId', 'title photo')     // Populate hotel details
+            .populate('extraIds', 'extraName extraPrice'); // Populate extra service details
+
         res.status(200).json({ success: true, message: "Successful!", data: bookings });
     } catch (error) {
         console.error("Error fetching all bookings:", error);
@@ -73,7 +83,11 @@ export const getAllBookingByUserId = async (req, res) => {
     const { userId } = req.params;
 
     try {
-        const bookings = await Booking.find({ userId }).sort({ bookAt: -1 }); // Sort by booking date descending
+        const bookings = await Booking.find({ userId })
+            .sort({ bookAt: -1 })
+            .populate('roomIds', 'roomName')  // Populate room details
+            .populate('hotelId', 'title photo')   // Populate hotel details
+            .populate('extraIds', 'extraName extraPrice');
 
         if (!bookings.length) {
             return res.status(404).json({ success: false, message: 'No bookings found for this user' });
@@ -95,8 +109,9 @@ export const updateBookingById = async (req, res) => {
             bookingId,
             { $set: req.body },
             { new: true, runValidators: true } // Added runValidators to validate the updated data
-        );
-
+        ).populate('roomIds', 'roomName price') // Populate updated room details if necessary
+        .populate('hotelId', 'title photo') // Populate updated hotel details
+        .populate('extraIds', 'extraName extraPrice');
         if (!updatedBooking) {
             return res.status(404).json({ success: false, message: 'Booking not found' });
         }
@@ -130,36 +145,33 @@ export const cancelBookingById = async (req, res) => {
     }
 };
 
-// ================================================================================================================
+// Get all confirmed bookings by hotelId
+export const getConfirmedBookingsByHotelId = async (req, res) => {
+    try {
+        const { hotelId } = req.params; // Lấy hotelId từ params
 
-export // Lấy tất cả booking với status: confirmed theo hotelId
-    const getConfirmedBookingsByHotelId = async (req, res) => {
-        try {
-            const { hotelId } = req.params; // Lấy hotelId từ params
+        const confirmedBookings = await Booking.find({
+            hotelId: hotelId,
+            status: 'confirmed'
+        })
+        .populate('roomIds', 'roomName') // Populate room details
+        .populate('userId', 'name email') // Populate user details if needed
+        .populate('extraIds', 'extraName extraPrice');
+        res.status(200).json({
+            success: true,
+            data: confirmedBookings
+        });
+    } catch (error) {
+        console.error("Error fetching confirmed bookings:", error);
+        res.status(500).json({
+            success: false,
+            message: 'Server Error',
+            error: error.message
+        });
+    }
+};
 
-            // Tìm tất cả booking với status: confirmed theo hotelId
-            const confirmedBookings = await Booking.find({
-                hotelId: hotelId,
-                status: 'confirmed'
-            })
-            // .populate('roomIds') // Nếu bạn cần thông tin chi tiết về phòng
-            //    .populate('userId'); // Nếu bạn cần thông tin người dùng
-
-            res.status(200).json({
-                success: true,
-                data: confirmedBookings
-            });
-        } catch (error) {
-            console.error("Error fetching confirmed bookings:", error);
-            res.status(500).json({
-                success: false,
-                message: 'Server Error',
-                error: error.message
-            });
-        }
-    };
-
-
+// Check room availability
 export const getRoomAvailability = async (req, res) => {
     const { hotelId, bookAt, checkOut } = req.params;
 
@@ -194,4 +206,3 @@ export const getRoomAvailability = async (req, res) => {
         res.status(500).json({ message: "Lỗi khi kiểm tra số lượng phòng", error });
     }
 };
-
