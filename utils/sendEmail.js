@@ -1,16 +1,10 @@
-import express from 'express';
+// utils/sendEmail.js
 import nodemailer from 'nodemailer';
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
 
 dotenv.config();
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-// Hàm gửi email xác nhận
+// Hàm gửi email xác nhận đặt phòng
 const sendConfirmationEmail = async (booking) => {
     const transporter = nodemailer.createTransport({
         service: 'Gmail',
@@ -20,29 +14,104 @@ const sendConfirmationEmail = async (booking) => {
         },
     });
 
-    const templatePath = path.join(__dirname, 'emailTemplate.html');
-    let html = fs.readFileSync(templatePath, 'utf-8');
+    // Nhóm phòng theo tên và đếm số lượng
+    const roomCount = booking.roomIds.reduce((acc, room) => {
+        acc[room.roomName] = (acc[room.roomName] || 0) + 1;
+        return acc;
+    }, {});
 
-    html = html.replace('{{fullName}}', booking.fullName)
-               .replace('{{tourName}}', booking.tourName)
-               .replace('{{tourId}}', booking._id)
-               .replace('{{adult}}', booking.adult)
-               .replace('{{children}}', booking.children)
-               .replace('{{baby}}', booking.baby)
-               .replace('{{bookAt}}', booking.bookAt)
-               .replace('{{price}}', booking.price);
+    // Tạo chuỗi mô tả các loại phòng
+    const roomDescriptions = Object.entries(roomCount)
+        .map(([roomName, count]) => `${roomName} (${count})`)
+        .join(', ');
+
+    const extraServices = booking.extraIds.length > 0 
+        ? booking.extraIds.map(extra => `${extra.extraName}`).join(', ')
+        : 'Không có';
 
     const mailOptions = {
         from: process.env.EMAIL_USER,
-        to: booking.userEmail,
-        subject: 'Booking Confirmation',
-        html: html,
+        to: booking.email,
+        subject: 'Xác nhận đặt phòng của bạn',
+        html: `
+            <!DOCTYPE html>
+            <html lang="vi">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>Xác nhận đặt phòng</title>
+                <style>
+                    body {
+                        font-family: 'Arial', sans-serif;
+                        background-color: #f4f4f4;
+                        margin: 0;
+                        padding: 0;
+                    }
+                    .container {
+                        max-width: 600px;
+                        margin: 40px auto;
+                        background: #ffffff;
+                        padding: 30px;
+                        border-radius: 8px;
+                        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+                    }
+                    h1 {
+                        color: #007BFF;
+                        font-size: 26px;
+                        text-align: center;
+                        margin-bottom: 20px;
+                    }
+                    h2 {
+                        color: #333;
+                    }
+                    p {
+                        color: #555;
+                        line-height: 1.6;
+                    }
+                    ul {
+                        list-style: none;
+                        padding: 0;
+                    }
+                    li {
+                        margin: 5px 0;
+                    }
+                    footer {
+                        margin-top: 20px;
+                        font-size: 0.9em;
+                        color: #666;
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <h1>Cảm ơn bạn đã đặt phòng!</h1>
+                    <p>Xin chào <strong>${booking.name}</strong>,</p>
+                    <p>Chúng tôi vui mừng thông báo rằng bạn đã đặt thành công phòng tại <strong>${booking.hotelId.title}</strong>.</p>
+                    <p><strong>Thông tin đặt phòng:</strong></p>
+                    <ul>
+                        <li>Loại phòng: ${roomDescriptions}</li>
+                        <li>Dịch vụ thêm: ${extraServices}</li>
+                        <li>Người lớn: ${booking.adult}</li>
+                        <li>Trẻ em: ${booking.children}</li>
+                        <li>Số điện thoại: ${booking.phone}</li>
+                        <li>Tổng số tiền: ${booking.totalAmount} VND</li>
+                        <li>Thời gian đặt: ${new Date(booking.bookAt).toLocaleString()}</li>
+                        <li>Ngày trả phòng: ${new Date(booking.checkOut).toLocaleString()}</li>
+                    </ul>
+                    <p>Chúng tôi sẽ liên hệ với bạn trong thời gian sớm nhất để xác nhận đặt phòng.</p>
+                    <footer>
+                        <p><i>Bạn nhận được email này vì bạn đã đặt phòng tại hệ thống của chúng tôi.</i></p>
+                    </footer>
+                </div>
+            </body>
+            </html>
+        `,
     };
 
     await transporter.sendMail(mailOptions);
 };
 
-// utils/sendEmail.js
+// Hàm gửi phản hồi cho khách hàng
 const sendReply = async (contact, replyMessage) => {
     const transporter = nodemailer.createTransport({
         service: 'Gmail',
@@ -75,21 +144,17 @@ const sendReply = async (contact, replyMessage) => {
                 box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
             }
             h1 {
-                color: #0056b3;
+                color: #007BFF;
                 font-size: 26px;
                 text-align: center;
                 margin-bottom: 20px;
             }
             h2 {
-                font-size: 20px;
-                margin-top: 20px;
-                margin-bottom: 15px;
                 color: #333;
             }
             p {
                 color: #555;
                 line-height: 1.6;
-                margin-bottom: 15px;
             }
             .footer {
                 margin-top: 30px;
@@ -99,17 +164,8 @@ const sendReply = async (contact, replyMessage) => {
                 border-top: 1px solid #eaeaea;
                 padding-top: 15px;
             }
-            .footer strong {
-                color: #0056b3;
-            }
-            .contact-info {
-                margin-top: 20px;
-                font-size: 14px;
-                line-height: 1.4;
-                text-align: left;
-            }
             .highlight {
-                color: #0056b3;
+                color: #007BFF;
                 font-weight: bold;
             }
         </style>
@@ -126,10 +182,8 @@ const sendReply = async (contact, replyMessage) => {
             <div class="footer">
                 <p>Trân trọng,<br>Đội ngũ Khách sạn Booking</p>
                 <div class="contact-info">
-                    <strong>Tên Khách Sạn</strong><br>
-                    Địa chỉ: Dòng địa chỉ 1<br>
-                    Thành phố, Quốc gia<br>
-                    Điện thoại: <strong>(+123) 456-7890</strong>
+                    Email: <strong>chungnkhe160935@fpt.edu.vn</strong>
+                    Điện thoại: <strong>0961897090</strong>
                 </div>
             </div>
         </div>
@@ -147,10 +201,4 @@ const sendReply = async (contact, replyMessage) => {
     await transporter.sendMail(mailOptions);
 };
 
-
-
-
 export { sendConfirmationEmail, sendReply };
-
-
-
