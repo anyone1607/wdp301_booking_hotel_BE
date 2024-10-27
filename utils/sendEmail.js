@@ -25,7 +25,7 @@ const sendConfirmationEmail = async (booking) => {
         .map(([roomName, count]) => `${roomName} (${count})`)
         .join(', ');
 
-    const extraServices = booking.extraIds.length > 0 
+    const extraServices = booking.extraIds.length > 0
         ? booking.extraIds.map(extra => `${extra.extraName}`).join(', ')
         : 'Không có';
 
@@ -94,7 +94,7 @@ const sendConfirmationEmail = async (booking) => {
                         <li>Người lớn: ${booking.adult}</li>
                         <li>Trẻ em: ${booking.children}</li>
                         <li>Số điện thoại: ${booking.phone}</li>
-                        <li>Tổng số tiền: ${booking.totalAmount} VND</li>
+                        <li>Tổng số tiền: ${booking.totalAmount}0 VND</li>
                         <li>Thời gian đặt: ${new Date(booking.bookAt).toLocaleString()}</li>
                         <li>Ngày trả phòng: ${new Date(booking.checkOut).toLocaleString()}</li>
                     </ul>

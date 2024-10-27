@@ -2,6 +2,8 @@ import Payment from "../models/Payment.js";
 import Refund from "../models/Refund.js";
 import Booking from "../models/Booking.js"; // Import mô hình Booking
 
+
+
 // Tạo một yêu cầu hoàn tiền (refund)
 export const createRefund = async (req, res) => {
     const { bankNumber, bankName, reasons, paymentId, name } = req.body; // Thêm name vào req.body
@@ -13,7 +15,22 @@ export const createRefund = async (req, res) => {
             return res.status(404).json({ message: 'Payment not found' });
         }
 
-        // Tạo yêu cầu hoàn tiền mới
+        // Lấy thông tin booking từ payment
+        const booking = payment.bookingId;
+
+        // Kiểm tra thời gian tạo booking và hiện tại
+        const currentTime = new Date();
+        const bookingTime = new Date(booking.createdAt);
+
+        // Tính khoảng thời gian giữa booking và hiện tại (tính theo giờ)
+        const timeDifferenceInHours = Math.abs(currentTime - bookingTime) / 36e5; // 36e5 là số milliseconds trong 1 giờ
+
+        // Nếu thời gian đã vượt quá 24 giờ thì không cho phép hoàn tiền
+        if (timeDifferenceInHours > 24) {
+            return res.status(403).json({ message: 'Refund requests are not allowed after 24 hours from booking creation.' });
+        }
+
+        // Tạo yêu cầu hoàn tiền mới nếu trong khoảng thời gian cho phép
         const newRefund = new Refund({
             bankNumber,
             bankName,
@@ -27,8 +44,8 @@ export const createRefund = async (req, res) => {
         // Cập nhật trạng thái của booking từ confirmed sang pending
         await Booking.findByIdAndUpdate(payment.bookingId, { status: 'pending' });
 
-        res.status(201).json({ 
-            message: 'Refund request created successfully', 
+        res.status(201).json({
+            message: 'Refund request created successfully',
             refund: newRefund,
             bookingId: payment.bookingId // Trả về bookingId để biết được booking nào đã được cập nhật
         });
@@ -37,6 +54,7 @@ export const createRefund = async (req, res) => {
         res.status(500).json({ message: 'Server error' });
     }
 };
+
 
 // Lấy tất cả các yêu cầu hoàn tiền
 export const getAllRefunds = async (req, res) => {
