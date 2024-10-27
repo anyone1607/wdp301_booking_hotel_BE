@@ -8,6 +8,14 @@ dotenv.config();
 const router = express.Router();
 
 
+// <<<<<<< CimChung
+// =======
+// // const payos = new PayOS(
+// //     "eea8ab60-aa1c-4c0c-a4d1-ab504ad5b582",
+// //     "ea97f7da-d699-4ace-ac9b-3ac977f0c250",
+// //     "bbd5ecde91faba16df941bf37514e4fb67206b7cb1e95aee9d5bcd748a7cc781"
+// // );
+// >>>>>>> Chun
 const payos = new PayOS(
     "eea8ab60-aa1c-4c0c-a4d1-ab504ad5b582",
     "ea97f7da-d699-4ace-ac9b-3ac977f0c250",
