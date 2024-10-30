@@ -129,8 +129,8 @@ export const updateBookingById = async (req, res) => {
             { $set: req.body },
             { new: true, runValidators: true } // Added runValidators to validate the updated data
         ).populate('roomIds', 'roomName price') // Populate updated room details if necessary
-        .populate('hotelId', 'title photo') // Populate updated hotel details
-        .populate('extraIds', 'extraName extraPrice');
+            .populate('hotelId', 'title photo') // Populate updated hotel details
+            .populate('extraIds', 'extraName extraPrice');
         if (!updatedBooking) {
             return res.status(404).json({ success: false, message: 'Booking not found' });
         }
@@ -173,9 +173,9 @@ export const getConfirmedBookingsByHotelId = async (req, res) => {
             hotelId: hotelId,
             status: 'confirmed'
         })
-        .populate('roomIds', 'roomName') // Populate room details
-        .populate('userId', 'name email') // Populate user details if needed
-        .populate('extraIds', 'extraName extraPrice');
+            .populate('roomIds', 'roomName') // Populate room details
+            .populate('userId', 'name email') // Populate user details if needed
+            .populate('extraIds', 'extraName extraPrice');
         res.status(200).json({
             success: true,
             data: confirmedBookings
@@ -216,6 +216,7 @@ export const getRoomAvailability = async (req, res) => {
             return {
                 roomId: room._id,
                 name: room.roomName,
+                price: room.roomPrice,
                 availableCount: room.quantity - bookedCount
             };
         });

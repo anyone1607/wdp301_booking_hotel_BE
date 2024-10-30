@@ -92,9 +92,9 @@ export const getExtraFeesByHotelId = async (req, res) => {
 
     try {
         const extraFees = await Extrafee.find({ hotelId, status: 'active' }); // Lọc theo hotelId và chỉ lấy những khoản phí thêm đang "active"
-        if (!extraFees.length) {
-            return res.status(404).json({ success: false, message: "No extra fees found for this hotel." });
-        }
+        // if (!extraFees.length) {
+        //     return res.status(404).json({ success: false, message: "No extra fees found for this hotel." });
+        // }
 
         res.status(200).json({ success: true, message: "Extra fees retrieved successfully.", data: extraFees });
     } catch (error) {
