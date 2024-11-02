@@ -177,12 +177,13 @@ const sendReply = async (contact, replyMessage) => {
             <p>Chúng tôi xin cảm ơn bạn đã liên hệ với chúng tôi và chúng tôi đã nhận được yêu cầu của bạn.</p>
             <p><strong>Thông điệp của bạn:</strong> ${contact.message}</p>
             <h3><strong>${replyMessage}</strong>,</h3>
-            <p>Nếu bạn có bất kỳ câu hỏi nào khác, vui lòng liên hệ với chúng tôi qua số điện thoại <strong class="highlight">(+123) 456-7890</strong> hoặc gửi email tới <strong class="highlight">support@hotelbooking.com</strong>.</p>
+            <p>Nếu bạn có bất kỳ câu hỏi nào khác, vui lòng liên hệ với chúng tôi qua số điện thoại <strong class="highlight">0961897090</strong> hoặc gửi email tới <strong class="highlight">chungnkhe160935@fpt.edu.vn</strong>.</p>
             <p>Chúng tôi luôn sẵn sàng hỗ trợ bạn!</p>
             <div class="footer">
                 <p>Trân trọng,<br>Đội ngũ Khách sạn Booking</p>
                 <div class="contact-info">
                     Email: <strong>chungnkhe160935@fpt.edu.vn</strong>
+                    <br/>
                     Điện thoại: <strong>0961897090</strong>
                 </div>
             </div>
@@ -194,7 +195,7 @@ const sendReply = async (contact, replyMessage) => {
     const mailOptions = {
         from: process.env.EMAIL_USER,
         to: contact.email,
-        subject: 'Phản hồi từ Khách sạn Booking',
+        subject: 'Phản hồi từ Hotel room Booking',
         html: mailContent,
     };
 

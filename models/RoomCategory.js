@@ -36,6 +36,10 @@ const roomCategorySchema = new mongoose.Schema(
             default: "active",
             enum: ["active", "inactive"],
         },
+        photo: {
+            type: String,
+      
+          },
     },
     { timestamps: true }
 );
