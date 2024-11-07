@@ -26,7 +26,7 @@ export const register = async (req, res) => {
 
       res.status(200).json({ success: true, message: "Đăng ký thành công!" });
    } catch (error) {
-      res.status(500).json({ success: false, message: "Đăng ký thất bại! Vui lòng thử lại." });
+      res.status(500).json({ success: false, message: "Email đã tồn tại! Vui lòng thử lại." });
    }
 };
 
