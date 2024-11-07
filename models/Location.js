@@ -34,6 +34,12 @@ const locationSchema = new mongoose.Schema(
       type: [String],
       default: [],
     },
+    // update 30/10/2024
+    status: {
+      type: String,
+      enum: ["active", "inactive"],
+      default: "active",
+    }
   },
   {
     timestamps: true,
